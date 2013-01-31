@@ -1,0 +1,57 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          virtualbox-autolaunch
+# Required-Start:    $all
+# Required-Stop:     $all
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: VirtualBox autostart
+# Description:       Auto savestate/startvm virtual machines betweeen reboot
+### END INIT INFO
+VBOXMANAGE="/usr/bin/VBoxManage -q"
+ASADM="su administrateur -c"
+SAVED="/var/local/virtualbox-autolaunch"
+
+stop()
+{
+    #Re-init
+    if [ -f $SAVED ]; then
+        rm -f $SAVED
+    fi
+    touch $SAVED
+    #Stopping
+    running=`$ASADM "$VBOXMANAGE list runningvms|cut -d' ' -f1|tr -d '\"'"`
+    for vm in $running; do
+        echo "-> $vm"
+        echo $vm >> $SAVED
+        $ASADM "$VBOXMANAGE controlvm $vm savestate"
+    done
+}
+
+start()
+{
+    if [ -f $SAVED ]; then
+        cat $SAVED | while read line; do
+            #TODO: verifier l'existence de la VM $line
+            $ASADM "VBoxHeadless --startvm $line&"
+        done
+    fi
+}
+
+# Teste si le service virtualbox est bien lancé
+if [ `/etc/init.d/virtualbox status|grep "not loaded"|wc -l` -eq "0" ]; then
+    case "$1" in 
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    *)
+        echo "Usage: $0 (start|stop)"
+        exit 1
+    esac
+else
+    echo "Le service virtualbox n'est pas lancé !"
+fi
+exit

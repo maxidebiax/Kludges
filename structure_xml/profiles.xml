@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<profiles:profiles xmlns:profiles="http://www.wpkg.org/profiles"
+	xmlns:wpkg="http://www.wpkg.org/wpkg" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.wpkg.org/profiles xsd/profiles.xsd ">
+
+	<profile id="default">
+	    <variable name="SOFTWARE" value="\\192.168.10.254\netlogon\wpkg\software" />
+		<package package-id="office_compatibilitypack" />
+		<package package-id="7zip" />
+		<package package-id="firefox" />
+		<package package-id="sumatrapdf" />
+		<package package-id="java7" />
+		<package package-id="freeplane" />
+		<package package-id="o2010-activation" />
+		<package package-id="wpkg_settings" />
+		<package package-id="dia" />
+		<package package-id="NotepadPlusPlus" />
+	</profile>
+
+    <!-- CDI -->
+	<profile id="cdi">
+        <depends profile-id="default" />
+		<package package-id="cmaptools" />
+		<package package-id="lmms" />
+	</profile>
+	<profile id="gest-cdi">
+        <depends profile-id="cdi" />
+		<package package-id="bcdicli" />
+		<package package-id="etiq" />
+		<package package-id="evernote" />
+		<package package-id="dotnet35" />
+		<package package-id="dymo" />
+	</profile>
+
+    <!-- Par section -->
+	<profile id="bts">
+        <depends profile-id="default" />
+		<package package-id="sphinx" />
+		<package package-id="ganttproject" />
+	</profile>
+
+	<profile id="maths">
+        <depends profile-id="default" />
+		<package package-id="xcas" />
+		<package package-id="python" />
+	</profile>
+
+    <!-- Par logiciel -->
+	<profile id="cmaptools">
+        <depends profile-id="default" />
+		<package package-id="cmaptools" />
+	</profile>
+
+	<profile id="projectlibre">
+        <depends profile-id="default" />
+        <package package-id="java" />
+		<package package-id="projectlibre" />
+	</profile>
+
+	<profile id="sphinx">
+        <depends profile-id="default" />
+		<package package-id="sphinx" />
+	</profile>
+
+    <!-- ### Postes prof / projection ###  -->
+	<profile id="projection">
+        <depends profile-id="default" />
+		<package package-id="dotnet35" />
+		<package package-id="pointofix" />
+		<package package-id="opensankore" />
+	</profile>
+	<profile id="vpi">
+        <depends profile-id="default" />
+        <depends profile-id="projection" />
+		<package package-id="Epson_EIT" />
+	</profile>
+
+	<profile id="prof">
+        <depends profile-id="projection" />
+	</profile>
+	<profile id="salleprof">
+        <depends profile-id="prof" />
+		<package package-id="imprimante-prof" />
+	</profile>
+
+	<profile id="v224">
+        <depends profile-id="projection" />
+        <depends profile-id="math" />
+		<package package-id="dotnet35" />
+		<package package-id="wiimote_whiteboard" />
+	</profile>
+
+	<profile id="s118">
+        <depends profile-id="default" />
+		<package package-id="lmms" />
+		<package package-id="sphinx" />
+	</profile>
+
+	<profile id="ctx">
+        <depends profile-id="default" />
+		<package package-id="imprimante-ctxlegt" />
+		<package package-id="ganttproject" />
+	</profile>
+
+    <!-- ### Test ###  -->
+	<profile id="test">
+	    <variable name="SOFTWARE" value="\\192.168.10.254\netlogon\wpkg\software" />
+		<package package-id="vlc" />
+	</profile>
+</profiles:profiles>
