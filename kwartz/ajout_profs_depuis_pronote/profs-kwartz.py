@@ -8,12 +8,12 @@ Il génère trois fichier qu'il faut importer depuis Kwartz~Control.
 Comme il se base sur les informations de pronote, le script n'est pas parfait. La création et la modification de compte fonctionnent bien, mais il faut faire une vérification pour la suppression car il peut y avoir des variations dans
 l'orthographe des noms.
 
-== Paramètres ==
+== Paramètres d'entrée ==
 * fichier d'export de Kwartz
 * liste des profs par classes (export depuis pronote)
 * nom du groupe kwartz des profs
 
-== Exportation depuis pronote ==
+=== Exportation depuis pronote ===
 Depuis un client pronote en mode administrateur :
 Fichier > Autres imports/exports > Exporter un fichier texte
 * Type de données à exporter -> Services
@@ -22,7 +22,7 @@ Fichier > Autres imports/exports > Exporter un fichier texte
 
 === Sorties ===
 * 3 fichiers textes à importer dans kwartz
-* sur la sortie standard, les doutes et un résumé des modifications
+* Un quatrième fichier contient les doutes et un résumé des changements de classes
 
 Attention, Pronote exporte en encodage utf-16-le (aller savoir pourquoi) ; il faut le convertir en utf-8 avant usage. Sous linux, il suffit d'exécuter la commande :
 > iconv -f UTF-16 -t UTF-8 MON_EXPORT_PRONOTE.txt > EXPORT_PRONOTE.txt
@@ -41,13 +41,14 @@ if len(sys.argv) != 4:
 EXPkwartz = codecs.open(sys.argv[1], 'r', encoding='ISO8859')
 EXPpronote = open(sys.argv[2], 'r')
 if not EXPkwartz or not EXPpronote:
-    print('Impossible de lire l\'un des fichiers')
+    print("Impossible de lire l'un des fichiers")
     exit(2)
 groupe_profs = sys.argv[3]
 # Fichiers de sortie
 OUTmodif = codecs.open(u'Amodifier.txt', 'w', encoding='utf-8')
 OUTajout = codecs.open(u'Aajouter.txt', 'w', encoding='utf-8')
 OUTsuppr = codecs.open(u'Asupprimer.txt', 'w', encoding='utf-8')
+OUTmess = codecs.open(u'Messages.txt', 'w', encoding='utf-8')
 
 def les_classes(table):
     # Génère la chaîne "groupe"
@@ -135,21 +136,21 @@ for a in sorted(Asuppr):
     else:
         OUTsuppr.write(enr.format(nom=nom, prenom=infos[a][1], groupe=u'anciens', login=infos[a][3], classes=u''))
 if len(Averif) > 1:
-    print(u"### Comptes dont le nom est composé ###")
-    print(u"=> Il faut vérifier l'orthographe du nom ou la correspondance kwartz/pronote, puis déplacer dans le bon fichier\n")
+    OUTmess.write(u"### Comptes dont le nom est compose ###\n")
+    OUTmess.write(u"=> Il faut vérifier l'orthographe du nom ou la correspondance kwartz/pronote, puis déplacer dans le bon fichier\n")
     for k, av in Averif.items():
-        print(av)
+        OUTmess.write("\n"+av)
 
 # À modifier
 Amodifier = list( set(profsKwartz) & set(profsPronote) )
-print(u"### Résumé des changements d'affectation ###")
+OUTmess.write(u"\n### Résumé des changements d'affectation ###\n")
 for a in sorted(Amodifier):
     # Comparaison des classes déclarées
     c = set(profsKwartz[a])^set(profsPronote[a])
     if len(c) > 0:
         ajout = ' +'.join(set(profsPronote[a])-set(profsKwartz[a]))
         retrait = ' -'.join(set(profsKwartz[a])-set(profsPronote[a]))
-        print("{prof}: +{ajout} // -{retrait}".format(prof=a, ajout=ajout, retrait=retrait))
+        OUTmess.write("{prof}: +{ajout} // -{retrait}\n".format(prof=a, ajout=ajout, retrait=retrait))
         nom = infos[a][0]
         prenom = infos[a][1]
         login = infos[a][3]
