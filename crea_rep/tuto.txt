@@ -1,0 +1,122 @@
+#####################################################################################
+#																					#
+#		Le repertoire à transmettre à chaque site est le repertoire \dist			#
+#																					#
+#####################################################################################
+
+# Il contient :
+#	- les fichiers nécessaires au fonctionnement du programme
+#	- les fichiers de configuration modifiables *.yaml et config.cfg
+#   - le logo IRIS (gif, 128x128)
+#   - éventuellement messages.log qui contient notamment les messages d'erreurs
+
+# L'execution du programme se fait par l'executable dans le repertoire \dist
+	 dist\crea_rep.exe
+
+# Le répertoire \dist peut etre renommer, néanmoins, les noms des  éléments contenus
+# dans le répértoire et l'arborescence NE DOIVENT PAS ETRE MODIFIES
+
+# En cas de modification de l'arborescence des repertoire d'Etude ou des fichiers
+# sources (suivi affaire,...) Il suffit de modifier les fichiers config.cfg et les
+# fichiers *.yaml
+
+
+=====================================================================================
+
+
+#####################################################################################
+#																					#
+#							Le fichier config.cfg									#
+#																					#
+#####################################################################################
+
+# Il s'agit du fichier permettant de définir le repertoire de dépot des fichier à
+# copier dans la structure du repertoire.
+
+# Il faut définir le "dépot" qui est le répertoire source
+#     (là où sont les fichiers originaux à copier)
+# et la "destination" qui porte bien son nom
+
+# Exemple
+depot=H:\HNEW\QUALITE ET ORGANISATION\
+
+arrivee=H:\hnew\production\etudes\
+
+
+=====================================================================================
+
+
+#####################################################################################
+#																					#
+#							Les fichiers *.yaml										#
+#																					#
+#####################################################################################
+
+# ils constituent la structure des repertoires d'affaire, uniquement en decrivant la
+# structure de manière simple et homogène
+
+# Exemple
+Etude:
+  AVP:~
+  PRO:~
+  DCE:~
+Originaux:
+  Ori_Client:~
+  Ori_sources:~
+Photo_Conception:~
+# 
+# On utilise la même syntaxe avec des espaces et pas des tabulations pour définir
+# l'arborescence et on termine avec ":"
+# Si il n'y a pas de sous-dossier, on termine la ligne par "~"
+
+# Pour ajouter un fichier à l'arborescence, il faut lancer une commande "RENOMMER"
+# Cette commande permet de définir :
+#	- "l'origine" du fichier à copier -> son nom dans le repertoire de dépot (config.cfg)
+#	- "la destination" -> il s'agit de son nom à renommer
+
+# Exemple
+Correspondance:
+  Bordereaux d'envoi: ~
+  Courriers: ~
+  Fax: ~
+  Mails:
+    RENOMMER:
+      origine: L000_00.pst
+      destination: $NUM$_$DPT$.pst
+#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ATTENTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#
+# Dans la "destination" les champs entre $ comme $NUM$ ou $DEP$ sont définis dans 
+# le programme python crea_rep.py et font appel à des commandes spécifiques
+#
+# Les variables disponibles sont : NUM, DPT, NOM
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Pour trouver les erreurs dans un fichier YAML : http://yamllint.com/  
+
+
+=====================================================================================
+
+
+#####################################################################################
+#																					#
+#						Le programme Python	crea_rep.py								#
+#																					#
+#####################################################################################
+
+# Pour pouvoir modifier le programme, il suffit d'éditer le fichier crea_rep.py avec
+# un éditeur de texte (notepad++). Il faudra alors relancer la compilation de ce
+# dernier afin de créer un nouveau crea_rep.exe dans le repertoire \dist.
+
+# Pour pouvoir compiler le programme, il faut installer la bibliotheque Python
+# pour avoir l'environnement développement permettant la compilation et la création
+# du .exe dans le répretoire \dist
+# il suffit pour cela de lancer le fichier suivant :
+	install.bat
+
+# Si besoin de modification, modifier à la racine \crea_rep les fichiers
+	config.cfg
+	*.yaml
+
+# Et lancer la compilation afin de généré le répertoire \dist
+	compile.bat

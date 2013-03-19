@@ -1,0 +1,73 @@
+Admin:
+  RENOMMER:
+    origine: L000_00_Suivi affaire Conception Lille v06.xls
+    destination: $NUM$_Suivi affaire Conception.xls
+  Comptes-rendus MOE-MOA: ~
+  Correspondance Admin:
+    RENOMMER:
+      origine: L000_00.pst
+      destination: $NUM$_ADM.pst
+  Factures IRIS: ~
+  Gestion du contrat: ~
+  Planning MOE: ~
+Conception:
+  RENOMMER:
+    origine: L000_Suivi affaire Conception Lille v06.xls
+    destination: $NUM$_Suivi affaire Conception.xls
+  Correspondance:
+    Bordereaux d'envoi: ~
+    Courriers: ~
+    Fax: ~
+    Mails:
+      RENOMMER:
+        origine: L000_00.pst
+        destination: $NUM$_$DPT$.pst
+  Etude:
+    FDP: ~
+    '000':
+      000_Pieces Graphiques:
+        000_Acad: ~
+        000_Cartes: ~
+      000_PDF&JPEG: ~
+      000_Pieces ecrites: ~
+      000_Metres-Estimations: ~
+      000_Notes de calculs: ~
+  Ori:
+    Ori annules: ~
+    Ori clients: ~
+    Ori cotraitants: ~
+    Ori sources: ~
+    Ori sous-traitants: ~
+  Photos Conception: ~
+Travaux:
+  RENOMMER:
+    origine: L000_Suivi affaire Travaux v05.xls
+    destination: $NUM$_Suivi affaire Travaux.xls
+  Acad:
+    Phasage: ~
+    Plans d'execution: 
+      Plans d'entreprise: ~
+      Plans maitrise d'oeuvre: ~
+      Plans maitrise d'ouvrage: ~
+    Plans de recolement: ~
+    Plans geometre controle exterieur: ~
+  Controles qualite:
+    Controles exterieur: ~
+    VISA: ~
+  Correspondance:
+    Bordereaux d'envoi: ~
+    Courriers: ~
+    Fax: ~
+    Mails:
+      RENOMMER:
+        origine: L000_00.pst
+        destination: $NUM$_$DPT$_Travaux.pst
+  Marche:
+    Avenant: ~
+    Comptes-rendus de reunions: ~
+    Constats: ~
+    Decomptes mensuels: ~
+    Ordres de services: ~
+    OPR et reception: ~
+    Ordres de services: ~
+  Photos Travaux: ~
