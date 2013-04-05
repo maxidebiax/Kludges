@@ -1,0 +1,16 @@
+###  Gerer les imprimantes  ###
+
+Ce script permet d'installer/supprimer automatiquement des imprimantes sur l'ordinateur.
+Il repose sur python 2.7, sur le paquet pyinstaller pour la compilation ( http://www.pyinstaller.org/ ), et sur plusieurs scripts vbs fournis par Microsoft (prndrvr.vbs, prnmngr.vbs et prnport.vbs).
+
+Les deux fichiers de config à compléter :
+* config.cfg qui contient les paramètres globaux et la déclaration des imprimantes. Format :
+	[nom de l'imprimante] (tel que déclaré sur kwartz)
+	affectations=liste des groupes ou des ordinateurs où il faut l'installer
+		(précéder un nom d'une * permet de définir l'imprimante comme étant par défaut)
+	modèle=nom du modèle de l'imprimante tel que déclaré dans modeles.cfg
+* modeles.cfg qui associe un nom de modèle à un fichier .inf et le nom du driver. Format :
+	[nom du modèle]
+	inf=nom du fichier .INF (à partir de chemin_inf)
+	driver=nom du driver à utiliser
+
