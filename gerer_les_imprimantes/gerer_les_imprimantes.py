@@ -1,6 +1,6 @@
 #!c:/Python27/python.exe -u
 # -*- coding: utf8 -*-
-import win32print, subprocess, socket, re, os, sys, ConfigParser, logging, string
+import win32print, subprocess, socket, re, os, sys, ConfigParser, logging, string, argparse
 """
                 ****  Gerer les imprimantes  ****
     Ajoute et supprime les imprimantes nécessaires pour cet ordinateur
@@ -29,6 +29,14 @@ def nslook(ip):
 		logging.error("Impossible de trouver le groupe pour {hote}".format(hote=ip))
 	return (fqdn[0], fqdn[1]) # hote, groupe
 
+"""
+import dns.resolver
+def requete_dns(nom):
+	# Résolution DNS : fqdn => IP
+	answers_IPv4 = dns.resolver.query(nom, 'A')
+	return answers_IPv4.address.pop()
+"""
+	
 def ajouter_ptr(nom, mode='ip'):
 	""" Ajoute une imprimante, par son IP ou par son UNC (partage SMB)
 	"""
@@ -48,6 +56,7 @@ def ajouter_ptr(nom, mode='ip'):
 			logging.error("Impossible de retrouver l'IP de {nom}".format(nom=nom))
 			return False
 		inst = 'cscript {wd}prnport.vbs -a -r IP_{ip} -h {ip} -o raw -n 9100'.format(ip=ip, wd=wd)
+		logging.debug("Installation IP : {chaine}".format(chaine=inst))
 		try:
 			subprocess.check_call(inst)
 		except:
@@ -79,7 +88,7 @@ def ajouter_ptr(nom, mode='ip'):
 		subprocess.check_call(inst)
 	except subprocess.CalledProcessError:
 		logging.critical("Erreur "+returncode+" lors de l'installation de l'imprimante : "+cmd+"\r\n"+output)
-	logging.debug("-- {nom} installé --".format(nom=nom))
+	logging.debug("--- {nom} installé ---".format(nom=nom))
 
 def supprimer_ptr(nom):
 	""" Supprime une imprimante
@@ -112,12 +121,13 @@ def lister_ptr():
 
 #------------------------
 #####  Préparation  #####
-# Paramètre : Working Directory
-if len(sys.argv) == 2:
-	wd = sys.argv[1] + os.sep
-else:
-	print("Veuillez preciser le chemin d'acces aux ressources (.exe, .cfg, .vbs).")
-	sys.exit(1)
+# Lecture des paramètres
+parser = argparse.ArgumentParser(prog='gerer_les_imprimantes')
+parser.add_argument('--defauts', action='store_true', help='Uniquement définir les imprimantes par défaut')
+parser.add_argument('workingdir', nargs=1, help='Dossier contenant les .cfg et les .vbs')
+args = parser.parse_args(sys.argv[1:])
+wd = args.workingdir.pop() + os.sep
+
 # Fichier de log
 fichier_log=r'C:\imprimantes.log'
 logging.basicConfig(
@@ -156,13 +166,14 @@ logging.debug("Infos sur la machine : {hote} / {groupe}".format(hote=hote, group
 printers = lister_ptr()
 logging.debug("Liste des imprimantes : {ptr}".format(ptr=', '.join(printers)))
 # On regarde les imprimantes installées et on retire celles qui sont déclarées mais non affectées
-for ptr in printers:
-	if nettoyage == "oui": # Purge !
-		supprimer_ptr(ptr)
-	elif ptr in imprimantes:
-		aff = imprimantes[ptr]['affectations']
-		if groupe not in aff and hote not in aff:
+if not args.defauts:
+	for ptr in printers:
+		if nettoyage == "oui": # Purge !
 			supprimer_ptr(ptr)
+		elif ptr in imprimantes:
+			aff = imprimantes[ptr]['affectations']
+			if groupe not in aff and hote not in aff:
+				supprimer_ptr(ptr)
 
 printers = lister_ptr()
 # On ajoute les imprimantes affectées non encore installées
@@ -174,10 +185,10 @@ for imp in imprimantes:
 	elif hote in affectations:
 		index = string.find(affectations, hote)
 	if index >= 0:
-		if imp not in printers:
+		if imp not in printers and not args.defauts:
 			ajouter_ptr(imp, 'ip')
 			#if utiliser_unc and "unc" in imprimantes[imp]:
 			#ajouter_ptr(imp, 'unc')
 		if affectations[index-1] == "*":
 			default_ptr(imp)
-logging.debug("-----  Installation des imprimantes terminée  -----")
+logging.debug("------  Installation des imprimantes terminée  ------")
