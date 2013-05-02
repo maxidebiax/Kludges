@@ -178,6 +178,9 @@ if not args.defauts:
 printers = lister_ptr()
 # On ajoute les imprimantes affectées non encore installées
 for imp in imprimantes:
+	if not 'affectations' in imprimantes[imp]:
+		logging.debug("{nom} n'a pas d'affectations".format(nom=imp))
+		continue
 	affectations = imprimantes[imp]['affectations']
 	index = -42
 	if groupe in affectations:
