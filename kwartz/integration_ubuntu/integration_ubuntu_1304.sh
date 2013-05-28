@@ -16,7 +16,7 @@ read -n 1 -s -p 'Appuyez sur une touche pour continuer...'
 echo "\n##  Declaration du proxy  ##"
 bashrc=/etc/profile.d/proxy.sh
 touch $bashrc # car il n'existe certainement pas
-if [ `grep -c _proxy $bashrc` -lt 1 ];then
+if [ `grep -c tp_proxy $bashrc` -lt 1 ];then
     echo "export http_proxy=http://$ip:3128" >> $bashrc
     echo "export ftp_proxy=ftp://$ip:3128" >> $bashrc
 fi
@@ -40,7 +40,7 @@ echo "## Installation des paquets localisés en français"
 apt-get -y install language-pack-fr language-pack-fr-base firefox-locale-fr libreoffice-l10n-fr libreoffice-help-fr thunderbird-locale-fr hunspell-fr hyphen-fr mythes-fr wfrench
 # Paquets requis pour un support complet des langues (évite un message d'alerte)
 apt-get -y install myspell-en-au openoffice.org-hyphenation myspell-en-gb libreoffice-l10n-en-gb hyphen-en-us thunderbird-locale-en-us language-pack-gnome-fr hunspell-en-ca thunderbird-locale-en thunderbird-locale-en-gb mythes-en-us libreoffice-l10n-en-za mythes-en-au libreoffice-help-en-gb wbritish myspell-en-za
-echo "# Sélectionner vos paramétres : #"
+echo "# Sélectionner vos paramétres de langue : #"
 gnome-language-selector
 
 echo "## Installation de lilo"
@@ -50,14 +50,20 @@ case $choix in
     ;;
     *)
     apt-get -y install lilo
-    # Contournement d'un bug de lilo qui ne reconnait pas les noyaux 3.x
-    #sed -i -e 's/vmlinuz-2\* 2/vmlinuz-[23]\* 2/' /usr/sbin/liloconfig
     liloconfig -f
     lilo;;
 esac
 
 echo "## Coupure des màj auto"
 sed -i -e 's/APT::Periodic::Update-Package-Lists "1"/APT::Periodic::Update-Package-Lists "0"/' /etc/apt/apt.conf.d/10periodic
+echo "## Coupure du crash report (apport)"
+# Bug connu de la 13.04 où on a un crash report de telepathy à chaque démarrage de l'ordi
+sed -i -e "s/enable=1/enable=0/" /etc/default/apport
+echo "## Configuration de l'horloge (NTP)"
+# Kwartz peut bien faire office de serveur de temps
+sed -i -e 's/NTPDATE_USE_NTP_CONF=yes/NTPDATE_USE_NTP_CONF=no/' /etc/default/ntpdate
+sed -i -e "s/NTPSERVERS=\"ntp.ubuntu.com\"/NTPSERVERS=\"$ip\"/" /etc/default/ntpdate
+ntpdate-debian
 
 echo "##  Authentification des utilisateurs sur le réseau et 'liaison au domaine'  ##"
 # réponses : ldap://ip_du_serveur ; dc=monlycee,dc=fr ; 3 ; non ; non
@@ -93,7 +99,7 @@ if [ `grep -c greeter-show-manual-login $lightdm` -lt 1 ];then
     echo "greeter-show-manual-login=true" >> $lightdm
 fi
 
-echo "## Modification des repertoires par défaut du home"
+echo "## Modification des répertoires par défaut du home"
 sed -i -e 's/^MUSIC/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^DOWNLOAD/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^TEMPLATES/#&/' /etc/xdg/user-dirs.defaults
@@ -101,6 +107,9 @@ sed -i -e 's/^PUBLIC/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^DOCUMENTS/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^PICTURES/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^VIDEO/#&/' /etc/xdg/user-dirs.defaults
+#echo "# Nettoyage de la barre de favoris"
+#dconf write "/com/canonical/unity/launcher/favorites" "['application://ubiquity-gtkui.desktop', 'application://nautilus.desktop', 'application://firefox.desktop', 'application://libreoffice-writer.desktop', 'application://libreoffice-calc.desktop', 'application://libreoffice-impress.desktop', 'application://gnome-control-center.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices']"
+#dconf update
 
 echo "## Création des liens symboliques"
 ln -s /bin/bash /bin/kwartz-sh
