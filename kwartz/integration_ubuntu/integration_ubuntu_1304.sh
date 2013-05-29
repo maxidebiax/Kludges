@@ -1,16 +1,16 @@
 #!/bin/bash
 # Script d'intégration d'Ubuntu 13.04 à un réseau Kwartz
-# !!! Nécessite une connexion internet !!!
-# Dans Kwartz~Control, mettre l'ordi en "Authorisé non filtré" pour la première màj
+# - Nécessite une connexion internet
+# - Dans Kwartz~Control, mettre l'ordi en "Authorisé non filtré" pour la première màj
 if [ $# -eq 1 ];then
     ip=$1
 else
     echo "Erreur de syntaxe : veuiller préciser l'ip du serveur Kwartz"
     exit 1
 fi
-echo "Si vous voulez pouvoir construire une image sur kwartz, il faut que Linux soit installé sur une partition en ext3 dont les inodes font 128 bits (Rembo5/Tivoli)."
+echo "Si vous voulez pouvoir construire une image sur kwartz, il faut que Linux soit installé sur une unique partition en ext3 dont les inodes font 128 bits (Rembo5/Tivoli)."
 echo "Voir http://www.kwartz.com/Installation-d-un-poste-Ubuntu-11.html pour l'utilisation manuelle de mkfs.ext3"
-echo "De même, il est indispensable d'utiliser lilo comme bootloader, et non grub"
+echo "De plus, il est indispensable d'utiliser lilo comme bootloader, et non grub"
 read -n 1 -s -p '> Appuyez sur une touche pour continuer...'
 
 echo "\n##  Declaration du proxy  ##"
@@ -50,7 +50,7 @@ case $choix in
     ;;
     *)
     apt-get -y install lilo
-    # Pas d'écran de sélection du kernel
+    # Retrait de l'écran de sélection du kernel
     sed -i -e 's/prompt/#prompt/' /etc/lilo.conf
     liloconfig -f
     lilo;;
@@ -62,7 +62,7 @@ echo "## Coupure du crash report (apport)"
 # Bug connu de la 13.04 où on a un crash report de telepathy à chaque démarrage de l'ordi
 sed -i -e "s/enabled=1/enabled=0/" /etc/default/apport
 echo "## Configuration de l'horloge (NTP)"
-# Kwartz peut bien faire office de serveur de temps
+# Kwartz peut faire office de serveur de temps
 sed -i -e 's/NTPDATE_USE_NTP_CONF=yes/NTPDATE_USE_NTP_CONF=no/' /etc/default/ntpdate
 sed -i -e "s/NTPSERVERS=\"ntp.ubuntu.com\"/NTPSERVERS=\"$ip\"/" /etc/default/ntpdate
 ntpdate-debian
@@ -72,7 +72,7 @@ echo "Les réponses à donner, dans l'ordre : "
 echo "* ldap://$ip"
 echo "* dc=monlycee,dc=fr (remplacer par votre nom de domaine)"
 echo "* 3, non, non"
-read -n 1 -s -p 'Pause...'
+read -n 1 -s -p '... Pause ... (appuyez sur une touche pour continuer)'
 apt-get -y install openbsd-inetd pidentd libpam-ldap
 sed -i -e 's/^pam_password md5/#&/' /etc/ldap.conf
 sed -i -e 's/#pam_password crypt/pam_password crypt/' /etc/ldap.conf
@@ -112,8 +112,8 @@ sed -i -e 's/^PUBLIC/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^DOCUMENTS/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^PICTURES/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^VIDEO/#&/' /etc/xdg/user-dirs.defaults
-echo "# Nettoyage de la barre de favoris (Unity launcher)" # Fonctionnement ératique
-dconf write "/com/canonical/unity/launcher/favorites" "['application://ubiquity-gtkui.desktop', 'application://nautilus.desktop', 'application://firefox.desktop', 'application://libreoffice-writer.desktop', 'application://libreoffice-calc.desktop', 'application://libreoffice-impress.desktop', 'application://gnome-control-center.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices']0000000000000000000000000000000000000000"
+echo "# Nettoyage de la barre de favoris (Unity launcher)" # Fonctionnement erratique
+dconf write "/com/canonical/unity/launcher/favorites" "['application://ubiquity-gtkui.desktop', 'application://nautilus.desktop', 'application://firefox.desktop', 'application://libreoffice-writer.desktop', 'application://libreoffice-calc.desktop', 'application://libreoffice-impress.desktop', 'application://gnome-control-center.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices']"
 
 echo "## Création des liens symboliques"
 ln -s /bin/bash /bin/kwartz-sh
