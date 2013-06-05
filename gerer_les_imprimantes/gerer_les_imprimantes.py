@@ -10,7 +10,6 @@ import win32print, subprocess, socket, re, os, sys, ConfigParser, logging, strin
 
 	TODO:
 	choix ip/unc (globale et local)
-	forcer purge par un paramètre ?
 	
 	Problèmes connus:
 	L'imprimante doit etre démarrée avant! (sinon, la résolution pour trouver l'ip lors de la première installation n'aboutie pas) -> dns ?
@@ -124,6 +123,7 @@ def lister_ptr():
 # Lecture des paramètres
 parser = argparse.ArgumentParser(prog='gerer_les_imprimantes')
 parser.add_argument('--defauts', action='store_true', help='Uniquement définir les imprimantes par défaut')
+parser.add_argument('--purge', action='store_true', help='Supprime toutes les imprimantes avant réinstallation')
 parser.add_argument('workingdir', nargs=1, help='Dossier contenant les .cfg et les .vbs')
 args = parser.parse_args(sys.argv[1:])
 wd = args.workingdir.pop() + os.sep
@@ -147,6 +147,9 @@ for sec in config.sections():
 # Options générales
 chemin_inf=config.get('General', 'chemin_inf')
 nettoyage=config.get('General', 'nettoyage')
+if args.purge:
+	# Nettoyage des imprimantes forcé par paramètre
+	nettoyage = "oui"
 ignorer_ptr=config.get('General', 'ignorer_ptr')
 # Chargement de la liste des modèles et de leur fichier INF
 mod = ConfigParser.ConfigParser()
