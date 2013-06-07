@@ -63,6 +63,9 @@ case $choix in
     liloconfig -f
     # Retrait de l'écran de sélection du kernel
     sed -i -e 's/prompt/#prompt/' /etc/lilo.conf
+    # Désactivation des UUID
+    #sed -i -e 's/root = "UUID/#root = "UUID/' /etc/lilo.conf
+    #sed -i -e 's/#root = \/dev/root = \/dev/' /etc/lilo.conf
     lilo;;
 esac
 
@@ -135,11 +138,12 @@ ln -s /bin/umount /bin/smbumount
 
 # Paquets supplémentaires
 apt-get -y install vim numlockx synaptic 
-echo "## Installation de LTSP"
-read -p "Procéder à l'installation de LTSP (partage de bureau ; nécessite un ordi serveur) ? [o/N] : " choix
-case $choix in
-    [oO])
-    apt-get -y install ltsp-client
-    *)
-    ;;
-esac
+#echo "## Installation de LTSP"
+#read -p "Procéder à l'installation de LTSP (partage de bureau ; nécessite un ordi serveur) ? [o/N] : " choix
+#case $choix in
+#    [oO])
+#    apt-get -y install ltsp-client
+#    *)
+#    ;;
+#esac
+echo "#  Installation terminée !  #"
