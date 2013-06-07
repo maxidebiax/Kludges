@@ -2,12 +2,16 @@
 # Script d'intégration d'Ubuntu 13.04 à un réseau Kwartz
 # - Nécessite une connexion internet
 # - Dans Kwartz~Control, mettre l'ordi en "Authorisé non filtré" pour la première màj
-if [ $# -eq 1 ];then
-    ip=$1
+
+# Récupération auto du proxy
+ip=`ip route | grep "default via" | cut -d" " -f3`
+if [ -z $ip ];then
+    echo "Impossible de retrouver l'ip du serveur Kwartz"
+    read -p "Veuiller la saisir : " ip
 else
-    echo "Erreur de syntaxe : veuiller préciser l'ip du serveur Kwartz"
-    exit 1
+    echo "L'adresse du proxy kwartz est $ip"
 fi
+echo "-------------------------------"
 echo "Si vous voulez pouvoir construire une image sur kwartz, il faut que Linux soit installé sur une unique partition en ext3 dont les inodes font 128 bits (Rembo5/Tivoli)."
 echo "Voir http://www.kwartz.com/Installation-d-un-poste-Ubuntu-11.html pour l'utilisation manuelle de mkfs.ext3"
 echo "De plus, il est indispensable d'utiliser lilo comme bootloader, et non grub"
@@ -21,6 +25,12 @@ if [ `grep -c tp_proxy $bashrc` -lt 1 ];then
     echo "export ftp_proxy=ftp://$ip:3128" >> $bashrc
 fi
 source $bashrc
+# skel
+bashrc=/etc/skel/.bashrc
+if [ `grep -c tp_proxy $bashrc` -lt 1 ];then
+    echo "export http_proxy=http://$ip:3128" >> $bashrc
+    echo "export ftp_proxy=ftp://$ip:3128" >> $bashrc
+fi
 echo "## ... et dans la session X"
 gsettings set org.gnome.system.proxy mode 'manual'
 for proto in http https
@@ -50,9 +60,9 @@ case $choix in
     ;;
     *)
     apt-get -y install lilo
+    liloconfig -f
     # Retrait de l'écran de sélection du kernel
     sed -i -e 's/prompt/#prompt/' /etc/lilo.conf
-    liloconfig -f
     lilo;;
 esac
 
@@ -66,8 +76,12 @@ echo "## Configuration de l'horloge (NTP)"
 sed -i -e 's/NTPDATE_USE_NTP_CONF=yes/NTPDATE_USE_NTP_CONF=no/' /etc/default/ntpdate
 sed -i -e "s/NTPSERVERS=\"ntp.ubuntu.com\"/NTPSERVERS=\"$ip\"/" /etc/default/ntpdate
 ntpdate-debian
+#echo "## Suppression de /etc/hostname"
+# Ainsi, dhcpd va récupérer le host-name (/etc/dhcp/dhclient.conf) lors du démarrage
+#rm -f /etc/hostname
+# Par contre, le dhcp répond parfois avec un suffixe _x
 
-echo "##  Authentification des utilisateurs sur le réseau et 'liaison au domaine'  ##"
+echo "## Authentification des utilisateurs sur le réseau et 'liaison au domaine' ##"
 echo "Les réponses à donner, dans l'ordre : "
 echo "* ldap://$ip"
 echo "* dc=monlycee,dc=fr (remplacer par votre nom de domaine)"
@@ -112,7 +126,7 @@ sed -i -e 's/^PUBLIC/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^DOCUMENTS/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^PICTURES/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^VIDEO/#&/' /etc/xdg/user-dirs.defaults
-echo "# Nettoyage de la barre de favoris (Unity launcher)" # Fonctionnement erratique
+echo "## Nettoyage de la barre de favoris (Unity launcher)" # Fonctionnement erratique
 dconf write "/com/canonical/unity/launcher/favorites" "['application://ubiquity-gtkui.desktop', 'application://nautilus.desktop', 'application://firefox.desktop', 'application://libreoffice-writer.desktop', 'application://libreoffice-calc.desktop', 'application://libreoffice-impress.desktop', 'application://gnome-control-center.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices']"
 
 echo "## Création des liens symboliques"
@@ -120,4 +134,12 @@ ln -s /bin/bash /bin/kwartz-sh
 ln -s /bin/umount /bin/smbumount
 
 # Paquets supplémentaires
-apt-get -y install vim numlockx
+apt-get -y install vim numlockx synaptic 
+echo "## Installation de LTSP"
+read -p "Procéder à l'installation de LTSP (partage de bureau ; nécessite un ordi serveur) ? [o/N] : " choix
+case $choix in
+    [oO])
+    apt-get -y install ltsp-client
+    *)
+    ;;
+esac
