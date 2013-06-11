@@ -16,32 +16,42 @@ echo "Si vous voulez pouvoir construire une image sur kwartz, il faut que Linux 
 echo "Voir http://www.kwartz.com/Installation-d-un-poste-Ubuntu-11.html pour l'utilisation manuelle de mkfs.ext3"
 echo "De plus, il est indispensable d'utiliser lilo comme bootloader, et non grub"
 read -n 1 -s -p '> Appuyez sur une touche pour continuer...'
-
-echo "\n##  Declaration du proxy  ##"
+echo ""
+echo "##  Declaration du proxy  ##"
 bashrc=/etc/profile.d/proxy.sh
 touch $bashrc # car il n'existe certainement pas
 if [ `grep -c tp_proxy $bashrc` -lt 1 ];then
+    echo "# Configuration du proxy (console)" >> $bashrc
     echo "export http_proxy=http://$ip:3128" >> $bashrc
     echo "export ftp_proxy=ftp://$ip:3128" >> $bashrc
 fi
 source $bashrc
-# skel
-bashrc=/etc/skel/.bashrc
-if [ `grep -c tp_proxy $bashrc` -lt 1 ];then
-    echo "export http_proxy=http://$ip:3128" >> $bashrc
-    echo "export ftp_proxy=ftp://$ip:3128" >> $bashrc
-fi
 echo "## ... et dans la session X"
+gnome=/etc/profile.d/gnome.sh
 gsettings set org.gnome.system.proxy mode 'manual'
-for proto in http https
+echo "# Configuration du proxy (mode graphique)" >> $gnome
+echo "gsettings set org.gnome.system.proxy mode 'manual'" > $gnome
+for proto in http https ftp
 do
     gsettings set org.gnome.system.proxy.$proto host "$ip"
+    echo "gsettings set org.gnome.system.proxy.$proto host '$ip'" >> $gnome
     gsettings set org.gnome.system.proxy.$proto port 3128
+    echo "gsettings set org.gnome.system.proxy.$proto port 3128" >> $gnome
 done
 echo "## ... et pour apt"
 aptproxy=/etc/apt/apt.conf.d/proxy
 echo "Acquire::http::Proxy \"http://$ip:3128\";" > $aptproxy
 echo "Acquire::ftp::Proxy \"ftp://$ip:3128\";" >> $aptproxy
+
+echo "# Nettoyage de la barre de favoris (Unity launcher)" >> $gnome
+echo "dconf write '/com/canonical/unity/launcher/favorites' \"['application://ubiquity-gtkui.desktop', 'application://nautilus.desktop', 'application://firefox.desktop', 'application://libreoffice-writer.desktop', 'application://libreoffice-calc.desktop', 'application://libreoffice-impress.desktop', 'application://gnome-control-center.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices']\"" >> $gnome
+
+echo "# Programmation de la retouche du fstab"
+rclocal=/etc/rc.local
+if [ `grep -c ext2 $rclocal` -lt 1 ];then
+    echo "# Retouche du fstab (mal) réécrit par Tivoli" >> $rclocal
+    echo "sed -i -e 's/ext2\tdefaults/ext3\terrors=remount-ro/' /etc/fstab" >> $rclocal
+fi
 
 echo "##  Mises à jour  ##"
 apt-get update
@@ -50,8 +60,6 @@ echo "## Installation des paquets localisés en français"
 apt-get -y install language-pack-fr language-pack-fr-base firefox-locale-fr libreoffice-l10n-fr libreoffice-help-fr thunderbird-locale-fr hunspell-fr hyphen-fr mythes-fr wfrench
 # Paquets requis pour un support complet des langues (évite un message d'alerte)
 apt-get -y install myspell-en-au openoffice.org-hyphenation myspell-en-gb libreoffice-l10n-en-gb hyphen-en-us thunderbird-locale-en-us language-pack-gnome-fr hunspell-en-ca thunderbird-locale-en thunderbird-locale-en-gb mythes-en-us libreoffice-l10n-en-za mythes-en-au libreoffice-help-en-gb wbritish myspell-en-za
-#echo "# Sélectionner vos paramétres de langue : #"
-#gnome-language-selector
 
 echo "## Installation de lilo"
 read -p "Procéder à l'installation de lilo ? [O/n] : " choix
@@ -63,8 +71,10 @@ case $choix in
     liloconfig -f
     # Retrait de l'écran de sélection du kernel
     sed -i -e 's/prompt/#prompt/' /etc/lilo.conf
-    # Désactivation des UUID
-    #sed -i -e 's/root = "UUID/#root = "UUID/' /etc/lilo.conf
+    # Définition du disque de démarrage
+    #sed -i -e 's/^boot = \/dev\/disk/#&' /etc/lilo.conf
+    #sed -i -e 's/^#boot = \/dev\/sda/boot = \/dev\/sda/' /etc/lilo.conf
+    #sed -i -e 's/root = "UUID/#&/' /etc/lilo.conf
     #sed -i -e 's/#root = \/dev/root = \/dev/' /etc/lilo.conf
     lilo;;
 esac
@@ -82,7 +92,7 @@ ntpdate-debian
 #echo "## Suppression de /etc/hostname"
 # Ainsi, dhcpd va récupérer le host-name (/etc/dhcp/dhclient.conf) lors du démarrage
 #rm -f /etc/hostname
-# Par contre, le dhcp répond parfois avec un suffixe _x
+# Par contre, le dhcp répond avec un suffixe _2 si on utilise la seconde interface réseau définit sur kwartz
 
 echo "## Authentification des utilisateurs sur le réseau et 'liaison au domaine' ##"
 echo "Les réponses à donner, dans l'ordre : "
@@ -129,8 +139,6 @@ sed -i -e 's/^PUBLIC/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^DOCUMENTS/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^PICTURES/#&/' /etc/xdg/user-dirs.defaults
 sed -i -e 's/^VIDEO/#&/' /etc/xdg/user-dirs.defaults
-echo "## Nettoyage de la barre de favoris (Unity launcher)" # Fonctionnement erratique
-dconf write "/com/canonical/unity/launcher/favorites" "['application://ubiquity-gtkui.desktop', 'application://nautilus.desktop', 'application://firefox.desktop', 'application://libreoffice-writer.desktop', 'application://libreoffice-calc.desktop', 'application://libreoffice-impress.desktop', 'application://gnome-control-center.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices']"
 
 echo "## Création des liens symboliques"
 ln -s /bin/bash /bin/kwartz-sh
@@ -146,4 +154,4 @@ apt-get -y install vim numlockx synaptic
 #    *)
 #    ;;
 #esac
-echo "#  Installation terminée !  #"
+echo "#  Bravo ! Installation terminée  #"
