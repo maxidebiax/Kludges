@@ -17,7 +17,7 @@ echo "Voir http://www.kwartz.com/Installation-d-un-poste-Ubuntu-11.html pour l'u
 echo "De plus, il est indispensable d'utiliser lilo comme bootloader, et non grub"
 read -n 1 -s -p '> Appuyez sur une touche pour continuer...'
 echo ""
-echo "##  Declaration du proxy  ##"
+echo "##  Déclaration du proxy  ##"
 bashrc=/etc/profile.d/proxy.sh
 touch $bashrc # car il n'existe certainement pas
 if [ `grep -c tp_proxy $bashrc` -lt 1 ];then
@@ -49,8 +49,10 @@ echo "dconf write '/com/canonical/unity/launcher/favorites' \"['application://ub
 echo "# Programmation de la retouche du fstab"
 rclocal=/etc/rc.local
 if [ `grep -c ext2 $rclocal` -lt 1 ];then
+    sed -i -e '/exit 0/d' $rclocal
     echo "# Retouche du fstab (mal) réécrit par Tivoli" >> $rclocal
     echo "sed -i -e 's/ext2\tdefaults/ext3\terrors=remount-ro/' /etc/fstab" >> $rclocal
+    echo "exit 0" >> $rclocal
 fi
 
 echo "##  Mises à jour  ##"
@@ -70,7 +72,7 @@ case $choix in
     apt-get -y install lilo
     liloconfig -f
     # Retrait de l'écran de sélection du kernel
-    sed -i -e 's/prompt/#prompt/' /etc/lilo.conf
+    sed -i -e 's/^prompt/#&/' /etc/lilo.conf
     # Définition du disque de démarrage
     #sed -i -e 's/^boot = \/dev\/disk/#&' /etc/lilo.conf
     #sed -i -e 's/^#boot = \/dev\/sda/boot = \/dev\/sda/' /etc/lilo.conf
@@ -154,4 +156,5 @@ apt-get -y install vim numlockx synaptic
 #    *)
 #    ;;
 #esac
+echo "###################################"
 echo "#  Bravo ! Installation terminée  #"
