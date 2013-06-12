@@ -1,50 +1,56 @@
 #!/bin/bash
 # Script d'intégration d'Ubuntu 13.04 à un réseau Kwartz
-# - Nécessite une connexion internet
+# - Nécessite une connexion internet et d'être en root
 # - Dans Kwartz~Control, mettre l'ordi en "Authorisé non filtré" pour la première màj
 
+echo "-----------------------------------"
 # Récupération auto du proxy
 ip=`ip route | grep "default via" | cut -d" " -f3`
 if [ -z $ip ];then
     echo "Impossible de retrouver l'ip du serveur Kwartz"
     read -p "Veuiller la saisir : " ip
 else
-    echo "L'adresse du proxy kwartz est $ip"
+    echo "L'adresse de votre proxy kwartz est $ip"
 fi
-echo "-------------------------------"
-echo "Si vous voulez pouvoir construire une image sur kwartz, il faut que Linux soit installé sur une unique partition en ext3 dont les inodes font 128 bits (Rembo5/Tivoli)."
+echo "-----------------------------------"
+echo "NB: Si vous voulez pouvoir construire une image sur kwartz, il faut que Linux soit installé sur une unique partition ext3 dont les inodes font 128 bits (Rembo5/Tivoli)."
 echo "Voir http://www.kwartz.com/Installation-d-un-poste-Ubuntu-11.html pour l'utilisation manuelle de mkfs.ext3"
 echo "De plus, il est indispensable d'utiliser lilo comme bootloader, et non grub"
-read -n 1 -s -p '> Appuyez sur une touche pour continuer...'
+read -n 1 -s -p '... Appuyez sur une touche pour continuer ...'
 echo ""
 echo "##  Déclaration du proxy  ##"
-bashrc=/etc/profile.d/proxy.sh
-touch $bashrc # car il n'existe certainement pas
-if [ `grep -c tp_proxy $bashrc` -lt 1 ];then
-    echo "# Configuration du proxy (console)" >> $bashrc
-    echo "export http_proxy=http://$ip:3128" >> $bashrc
-    echo "export ftp_proxy=ftp://$ip:3128" >> $bashrc
+proxy=/etc/profile.d/proxy.sh
+touch $proxy # car il n'existe certainement pas
+if [ `grep -c tp_proxy $proxy` -lt 1 ];then
+    echo "# Configuration du proxy (console)" >> $proxy
+    echo "export http_proxy=http://$ip:3128" >> $proxy
+    echo "export ftp_proxy=ftp://$ip:3128" >> $proxy
 fi
-source $bashrc
+chmod +x $proxy
+source $proxy
 echo "## ... et dans la session X"
 gnome=/etc/profile.d/gnome.sh
-gsettings set org.gnome.system.proxy mode 'manual'
-echo "# Configuration du proxy (mode graphique)" >> $gnome
-echo "gsettings set org.gnome.system.proxy mode 'manual'" > $gnome
-for proto in http https ftp
-do
-    gsettings set org.gnome.system.proxy.$proto host "$ip"
-    echo "gsettings set org.gnome.system.proxy.$proto host '$ip'" >> $gnome
-    gsettings set org.gnome.system.proxy.$proto port 3128
-    echo "gsettings set org.gnome.system.proxy.$proto port 3128" >> $gnome
-done
+echo "# Configuration du proxy (mode graphique)" > $gnome
+echo "gsettings set org.gnome.system.proxy mode 'manual'" >> $gnome
+echo "for proto in http https ftp" >> $gnome
+echo "do" >> $gnome
+echo "  gsettings set org.gnome.system.proxy.\$proto host '$ip'" >> $gnome
+echo "  gsettings set org.gnome.system.proxy.\$proto port 3128" >> $gnome
+echo "done" >> $gnome
+chmod +x $gnome
+$gnome
 echo "## ... et pour apt"
 aptproxy=/etc/apt/apt.conf.d/proxy
 echo "Acquire::http::Proxy \"http://$ip:3128\";" > $aptproxy
 echo "Acquire::ftp::Proxy \"ftp://$ip:3128\";" >> $aptproxy
 
+# Paramétrages au démarrage de la session
+echo "" >> $gnome
 echo "# Nettoyage de la barre de favoris (Unity launcher)" >> $gnome
 echo "dconf write '/com/canonical/unity/launcher/favorites' \"['application://ubiquity-gtkui.desktop', 'application://nautilus.desktop', 'application://firefox.desktop', 'application://libreoffice-writer.desktop', 'application://libreoffice-calc.desktop', 'application://libreoffice-impress.desktop', 'application://gnome-control-center.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices']\"" >> $gnome
+echo "# Désactivation de la demande de mot de passe après l'écran de veille" >> $gnome
+echo "dconf write '/com/gnome/desktop/lockdown/disable-lock-screen' 'true'" >> $gnome
+echo "dconf write '/com/gnome/desktop/screensaver/lock-enabled' 'false'" >> $gnome
 
 echo "# Programmation de la retouche du fstab"
 rclocal=/etc/rc.local
@@ -92,16 +98,16 @@ sed -i -e 's/NTPDATE_USE_NTP_CONF=yes/NTPDATE_USE_NTP_CONF=no/' /etc/default/ntp
 sed -i -e "s/NTPSERVERS=\"ntp.ubuntu.com\"/NTPSERVERS=\"$ip\"/" /etc/default/ntpdate
 ntpdate-debian
 #echo "## Suppression de /etc/hostname"
-# Ainsi, dhcpd va récupérer le host-name (/etc/dhcp/dhclient.conf) lors du démarrage
+# Ainsi, dhcpd va récupérer le host-name par dhcp (/etc/dhcp/dhclient.conf) lors du démarrage
 #rm -f /etc/hostname
-# Par contre, le dhcp répond avec un suffixe _2 si on utilise la seconde interface réseau définit sur kwartz
+# Par contre, le dhcp kwartz répond avec un suffixe _2 si on utilise la seconde interface réseau définit
 
 echo "## Authentification des utilisateurs sur le réseau et 'liaison au domaine' ##"
 echo "Les réponses à donner, dans l'ordre : "
 echo "* ldap://$ip"
 echo "* dc=monlycee,dc=fr (remplacer par votre nom de domaine)"
 echo "* 3, non, non"
-read -n 1 -s -p '... Pause ... (appuyez sur une touche pour continuer)'
+read -n 1 -s -p '... Appuyez sur une touche pour continuer ...'
 apt-get -y install openbsd-inetd pidentd libpam-ldap
 sed -i -e 's/^pam_password md5/#&/' /etc/ldap.conf
 sed -i -e 's/#pam_password crypt/pam_password crypt/' /etc/ldap.conf
@@ -146,8 +152,6 @@ echo "## Création des liens symboliques"
 ln -s /bin/bash /bin/kwartz-sh
 ln -s /bin/umount /bin/smbumount
 
-# Paquets supplémentaires
-apt-get -y install vim numlockx synaptic 
 #echo "## Installation de LTSP"
 #read -p "Procéder à l'installation de LTSP (partage de bureau ; nécessite un ordi serveur) ? [o/N] : " choix
 #case $choix in
@@ -156,5 +160,13 @@ apt-get -y install vim numlockx synaptic
 #    *)
 #    ;;
 #esac
+
+# Paquets supplémentaires
+apt-get -y install vim numlockx synaptic 
+# Paquets pédagogiques
+apt-get -y install geogebra geogebra-gnome 
+#... gromit
+
 echo "###################################"
 echo "#  Bravo ! Installation terminée  #"
+echo "###################################"
