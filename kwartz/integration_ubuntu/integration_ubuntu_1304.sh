@@ -13,10 +13,12 @@ else
     echo "L'adresse de votre proxy kwartz est $ip"
 fi
 echo "-----------------------------------"
+# Disclaimer
 echo "NB: Si vous voulez pouvoir construire une image sur kwartz, il faut que Linux soit installé sur une unique partition ext3 dont les inodes font 128 bits (Rembo5/Tivoli)."
 echo "Voir http://www.kwartz.com/Installation-d-un-poste-Ubuntu-11.html pour l'utilisation manuelle de mkfs.ext3"
 echo "De plus, il est indispensable d'utiliser lilo comme bootloader, et non grub"
 read -n 1 -s -p '... Appuyez sur une touche pour continuer ...'
+# Proxy
 echo ""
 echo "##  Déclaration du proxy  ##"
 proxy=/etc/profile.d/proxy.sh
@@ -37,30 +39,12 @@ echo "do" >> $gnome
 echo "  gsettings set org.gnome.system.proxy.\$proto host '$ip'" >> $gnome
 echo "  gsettings set org.gnome.system.proxy.\$proto port 3128" >> $gnome
 echo "done" >> $gnome
-chmod +x $gnome
-$gnome
 echo "## ... et pour apt"
 aptproxy=/etc/apt/apt.conf.d/proxy
 echo "Acquire::http::Proxy \"http://$ip:3128\";" > $aptproxy
 echo "Acquire::ftp::Proxy \"ftp://$ip:3128\";" >> $aptproxy
 
-# Paramétrages au démarrage de la session
-echo "" >> $gnome
-echo "# Nettoyage de la barre de favoris (Unity launcher)" >> $gnome
-echo "dconf write '/com/canonical/unity/launcher/favorites' \"['application://ubiquity-gtkui.desktop', 'application://nautilus.desktop', 'application://firefox.desktop', 'application://libreoffice-writer.desktop', 'application://libreoffice-calc.desktop', 'application://libreoffice-impress.desktop', 'application://gnome-control-center.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices']\"" >> $gnome
-echo "# Désactivation de la demande de mot de passe après l'écran de veille" >> $gnome
-echo "dconf write '/com/gnome/desktop/lockdown/disable-lock-screen' 'true'" >> $gnome
-echo "dconf write '/com/gnome/desktop/screensaver/lock-enabled' 'false'" >> $gnome
-
-echo "# Programmation de la retouche du fstab"
-rclocal=/etc/rc.local
-if [ `grep -c ext2 $rclocal` -lt 1 ];then
-    sed -i -e '/exit 0/d' $rclocal
-    echo "# Retouche du fstab (mal) réécrit par Tivoli" >> $rclocal
-    echo "sed -i -e 's/ext2\tdefaults/ext3\terrors=remount-ro/' /etc/fstab" >> $rclocal
-    echo "exit 0" >> $rclocal
-fi
-
+# Mises à jour
 echo "##  Mises à jour  ##"
 apt-get update
 apt-get -y dist-upgrade
@@ -87,13 +71,31 @@ case $choix in
     lilo;;
 esac
 
+# Paramétrages
+echo "" >> $gnome
+echo "# Nettoyage de la barre de favoris (Unity launcher)" >> $gnome
+echo "dconf write '/com/canonical/unity/launcher/favorites' \"['application://ubiquity-gtkui.desktop', 'application://nautilus.desktop', 'application://firefox.desktop', 'application://libreoffice-writer.desktop', 'application://libreoffice-calc.desktop', 'application://libreoffice-impress.desktop', 'application://gnome-control-center.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices']\"" >> $gnome
+echo "# Désactivation de la demande de mot de passe après l'écran de veille" >> $gnome
+echo "dconf write '/com/gnome/desktop/lockdown/disable-lock-screen' 'true'" >> $gnome
+echo "dconf write '/com/gnome/desktop/screensaver/lock-enabled' 'false'" >> $gnome
+chmod +x $gnome
+$gnome
+
+echo "# Programmation de la retouche du fstab"
+rclocal=/etc/rc.local
+if [ `grep -c ext2 $rclocal` -lt 1 ];then
+    sed -i -e '/exit 0/d' $rclocal
+    echo "# Retouche du fstab (mal) réécrit par Tivoli" >> $rclocal
+    echo "sed -i -e 's/ext2\tdefaults/ext3\terrors=remount-ro/' /etc/fstab" >> $rclocal
+    echo "exit 0" >> $rclocal
+fi
+
 echo "## Coupure des màj auto"
 sed -i -e 's/APT::Periodic::Update-Package-Lists "1"/APT::Periodic::Update-Package-Lists "0"/' /etc/apt/apt.conf.d/10periodic
 echo "## Coupure du crash report (apport)"
 # Bug connu de la 13.04 où on a un crash report de telepathy à chaque démarrage de l'ordi
 sed -i -e "s/enabled=1/enabled=0/" /etc/default/apport
-echo "## Configuration de l'horloge (NTP)"
-# Kwartz peut faire office de serveur de temps
+echo "## Configuration de l'horloge (NTP)" # Kwartz peut faire office de serveur de temps
 sed -i -e 's/NTPDATE_USE_NTP_CONF=yes/NTPDATE_USE_NTP_CONF=no/' /etc/default/ntpdate
 sed -i -e "s/NTPSERVERS=\"ntp.ubuntu.com\"/NTPSERVERS=\"$ip\"/" /etc/default/ntpdate
 ntpdate-debian
@@ -102,6 +104,7 @@ ntpdate-debian
 #rm -f /etc/hostname
 # Par contre, le dhcp kwartz répond avec un suffixe _2 si on utilise la seconde interface réseau définit
 
+# Authentification LDAP
 echo "## Authentification des utilisateurs sur le réseau et 'liaison au domaine' ##"
 echo "Les réponses à donner, dans l'ordre : "
 echo "* ldap://$ip"
