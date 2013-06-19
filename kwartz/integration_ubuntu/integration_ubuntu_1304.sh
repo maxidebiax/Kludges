@@ -30,7 +30,7 @@ if [ `grep -c tp_proxy $proxy` -lt 1 ];then
 fi
 chmod +x $proxy
 source $proxy
-echo "## ... et dans la session X"
+echo "## ... et dans les sessions X"
 gnome=/etc/profile.d/gnome.sh
 echo "# Configuration du proxy (mode graphique)" > $gnome
 echo "gsettings set org.gnome.system.proxy mode 'manual'" >> $gnome
@@ -75,7 +75,7 @@ esac
 echo "" >> $gnome
 echo "# Nettoyage de la barre de favoris (Unity launcher)" >> $gnome
 echo "dconf write '/com/canonical/unity/launcher/favorites' \"['application://ubiquity-gtkui.desktop', 'application://nautilus.desktop', 'application://firefox.desktop', 'application://libreoffice-writer.desktop', 'application://libreoffice-calc.desktop', 'application://libreoffice-impress.desktop', 'application://gnome-control-center.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices']\"" >> $gnome
-echo "# Désactivation de la demande de mot de passe après l'écran de veille" >> $gnome
+echo "# Désactivation du verouillage écran" >> $gnome
 echo "dconf write '/com/gnome/desktop/lockdown/disable-lock-screen' 'true'" >> $gnome
 echo "dconf write '/com/gnome/desktop/screensaver/lock-enabled' 'false'" >> $gnome
 chmod +x $gnome
