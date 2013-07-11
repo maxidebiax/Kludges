@@ -13,12 +13,13 @@ contains()
 sauvegarder_vm()
 {
     echo "# Sauvegarde de '$1'"
-    if [ ! -f $DEST/$1 ]; then
+    if [ -f $DEST/$1 ]; then
         mkdir $DEST/$1
     fi
     rsync -a --delete "$ORIG/$1/" "$DEST/$1/"
 }
 
+echo `date +%Y%m%d`
 vms=`$VBOXMANAGE list vms|cut -d" " -f1|tr -d '"'`
 running=`$VBOXMANAGE list runningvms|cut -d" " -f1|tr -d '"'`
 
