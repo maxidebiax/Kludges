@@ -26,16 +26,16 @@ Fichier > Autres imports/exports > Exporter un fichier texte
 
 Attention, Pronote exporte en encodage utf-16-le (aller savoir pourquoi) ; il faut le convertir en utf-8 avant usage. Sous linux, il suffit d'exécuter la commande :
 > iconv -f UTF-16 -t UTF-8 MON_EXPORT_PRONOTE.txt > EXPORT_PRONOTE.txt
+
+Pour python3 seulement !
 """
 
 if len(sys.argv) != 4:
-    """
     print(u"!!! Ce programme nécessite trois paramètres : !!!\n" + \
           u"* le fichier d'export de kwartz\n" + \
           u"* l'export classes-profs issu de pronote\n" + \
           u"* le nom du groupe kwartz des profs\n" + \
           u"\nexemple: python profs-kwartz.py export EXP_PRONOTE.txt GroupeProf")
-    """
     sys.exit(1)
 # Fichiers d'entrée
 EXPkwartz = codecs.open(sys.argv[1], 'r', encoding='ISO8859')
@@ -58,7 +58,7 @@ def les_classes(table):
         if b[0].isdigit():
             # on ajoute un c devant les classes dont le nom comme par un chiffre
             suffixe = u'c'
-        c.append(suffixe + unicode(b).replace('-', ''))
+        c.append(suffixe + b.replace('-', ''))
     return u' '.join(c)
 
 ### Lecture des données ###
@@ -72,10 +72,12 @@ for ligne in EXPpronote:
         for i in a[1].split(','): # Plusieurs profs avec la même matière dans la même classe
             n = REprof.search(i)
             if n:
-                nom = unicode(n.group(2).strip().replace("'", '').upper())
+                nom = n.group(2).strip().replace("'", '').upper()
                 classe = classe.replace("-","").replace("bps", "bsp")
                 if classe[0].isdigit():
                     classe = u"c"+classe
+                if classe[:4] == "fcil":
+                    classe = u"fcil"
                 if classe[:3] != "ufa":
                     if nom in profsPronote:
                         if classe not in profsPronote[nom]:
@@ -92,7 +94,7 @@ for ligne in EXPkwartz:
     if m:
         nom = m.group(1)
         prenom = m.group(2).upper()
-        prenom = unicodedata.normalize('NFKD', prenom).encode('ASCII', 'ignore')
+        prenom = unicodedata.normalize('NFKD', prenom).encode('ASCII', 'ignore').decode("utf-8")
         j = "{nom} {pre}".format(nom=nom, pre=prenom)
         login = m.group(3)
         classes = m.group(4).split(' ')
@@ -108,7 +110,7 @@ for ligne in EXPkwartz:
 
 ### Traitement ###
 # Format d'une ligne d'importation Kwartz
-enr = u'{nom};{prenom};{groupe};{login};{login};;;;{classes};;;;;;<LOCAL>;Professeur;\r\n'
+enr = u'{nom};{prenom};{groupe};{login};{login};{nom};;;{classes};;;;;;<LOCAL>;Professeur;\r\n'
 # À ajouter
 Aajouter = list( set(profsPronote) - set(profsKwartz) )
 Averif = {}
@@ -127,17 +129,20 @@ for a in sorted(Aajouter):
 # À supprimer ?
 #Comptes Kwartz qui sont inconnus dans Pronote
 #Nécessairement plein de faux positifs
+# comme les profs associes à l'ufa/fcil, ou qui n'on jamais de classe complète
 Asuppr = list( set(profsKwartz) - set(profsPronote) )
 for a in sorted(Asuppr):
     nom = infos[a][0]
+    prenom=infos[a][1]
+    login=infos[a][3]
     if nom in Averif.keys():
         # Nom déjà vérifier => proposition de correction
-        Averif[nom] = Averif[nom]+"> "+enr.format(nom=nom, prenom=infos[a][1], groupe=u'anciens', login=infos[a][3], classes=u'')
+        Averif[nom] = Averif[nom]+"> "+enr.format(nom=nom, prenom=prenom, groupe=u'anciens', login=login, classes=u'')
     else:
-        OUTsuppr.write(enr.format(nom=nom, prenom=infos[a][1], groupe=u'anciens', login=infos[a][3], classes=u''))
+        OUTsuppr.write(enr.format(nom=nom, prenom=prenom, groupe=u'anciens', login=login, classes=u''))
 if len(Averif) > 1:
     OUTmess.write(u"### Comptes dont le nom est compose ###\n")
-    OUTmess.write(u"=> Il faut vérifier l'orthographe du nom ou la correspondance kwartz/pronote, puis déplacer dans le bon fichier\n")
+    OUTmess.write(u"=> Il faut vérifier l'orthographe du nom ou la correspondance kwartz/edt, puis déplacer dans le bon fichier\n")
     for k, av in Averif.items():
         OUTmess.write("\n"+av)
 
@@ -160,3 +165,5 @@ for a in sorted(Amodifier):
 OUTajout.close()
 OUTsuppr.close()
 OUTmodif.close()
+OUTmess.write(u"\n## Attention !! ##\nLe mot de passe par défaut des nouveaux comptes profs est leur nom de famille en minuscule. Ne pas oublier de cocher \"Forcer la modification du mot de passe\" lors de l\'importation.")
+OUTmess.close()
