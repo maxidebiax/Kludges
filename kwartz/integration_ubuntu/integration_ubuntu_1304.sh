@@ -136,10 +136,16 @@ pamcommon=/etc/pam.d/common-session
 if [ `grep -c "pam_mkhomedir.so umask=077 silent skel=/etc/skel/" $pamcommon` -lt 1 ];then
     sed -i -e '/session.*optional.*mount/i\session required\tpam_mkhomedir.so umask=077 silent skel=/etc/skel/' $pamcommon
 fi
-echo "## Activation de l'écran de login"
+echo "## Modification de lightdm.conf"
 lightdm=/etc/lightdm/lightdm.conf
 if [ `grep -c greeter-show-manual-login $lightdm` -lt 1 ];then
+    # Focer l'écran de connexion
     echo "greeter-show-manual-login=true" >> $lightdm
+fi
+if [ `grep -c allow-guest $lightdm` -lt 1 ];then
+    # Pas de compte invité, ni de connexion distante
+    echo "allow-guest=false" >> $lightdm
+    echo "greeter-show-remote-login=false" >> $lightdm
 fi
 
 echo "## Modification des répertoires par défaut du home"
@@ -168,7 +174,7 @@ ln -s /bin/umount /bin/smbumount
 apt-get -y install vim numlockx synaptic 
 # Paquets pédagogiques
 apt-get -y install geogebra geogebra-gnome 
-#... gromit
+#... gromit, java + java-plugin
 
 echo "###################################"
 echo "#  Bravo ! Installation terminée  #"
