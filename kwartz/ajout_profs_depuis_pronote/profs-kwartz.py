@@ -28,6 +28,9 @@ Attention, Pronote exporte en encodage utf-16-le (aller savoir pourquoi) ; il fa
 > iconv -f UTF-16 -t UTF-8 MON_EXPORT_PRONOTE.txt > EXPORT_PRONOTE.txt
 
 Pour python3 seulement !
+TODO : mot de passe avec la date de naissance
+TODO : ajouter aussi en groupe invité
+TODO : groupe vide / classe à supprimer
 """
 
 if len(sys.argv) != 4:
@@ -73,6 +76,8 @@ for ligne in EXPpronote:
             n = REprof.search(i)
             if n:
                 nom = n.group(2).strip().replace("'", '').upper()
+                # TODO : tester ce remplacement d'accent sur frederic.sibuet-masson
+                #nom = unicodedata.normalize('NFKD', nom).encode('ASCII', 'ignore').decode("utf-8")
                 classe = classe.replace("-","").replace("bps", "bsp")
                 if classe[0].isdigit():
                     classe = u"c"+classe
@@ -129,7 +134,7 @@ for a in sorted(Aajouter):
 # À supprimer ?
 #Comptes Kwartz qui sont inconnus dans Pronote
 #Nécessairement plein de faux positifs
-# comme les profs associes à l'ufa/fcil, ou qui n'on jamais de classe complète
+# comme les profs associés à l'ufa/fcil, ou qui n'on jamais de classe complète
 Asuppr = list( set(profsKwartz) - set(profsPronote) )
 for a in sorted(Asuppr):
     nom = infos[a][0]
