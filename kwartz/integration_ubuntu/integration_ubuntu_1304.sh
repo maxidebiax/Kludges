@@ -64,10 +64,10 @@ case $choix in
     # Retrait de l'écran de sélection du kernel
     sed -i -e 's/^prompt/#&/' /etc/lilo.conf
     # Définition du disque de démarrage
-    #sed -i -e 's/^boot = \/dev\/disk/#&' /etc/lilo.conf
-    #sed -i -e 's/^#boot = \/dev\/sda/boot = \/dev\/sda/' /etc/lilo.conf
-    #sed -i -e 's/root = "UUID/#&/' /etc/lilo.conf
-    #sed -i -e 's/#root = \/dev/root = \/dev/' /etc/lilo.conf
+    sed -i -e 's/^boot = \/dev\/disk/#&' /etc/lilo.conf
+    sed -i -e 's/^#boot = \/dev\/sda/boot = \/dev\/sda/' /etc/lilo.conf
+    sed -i -e 's/root = "UUID/#&/' /etc/lilo.conf
+    sed -i -e 's/#root = \/dev/root = \/dev/' /etc/lilo.conf
     lilo;;
 esac
 
