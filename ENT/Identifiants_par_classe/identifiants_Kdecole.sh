@@ -6,7 +6,7 @@
 # Paramètres
 # 1 : nom de l'export Kd'école
 # 2 : type de profil voulu (Eleve, Tuteur, Enseignant, Personnel)
-cat $1 | sort -t\; -k 6,6d -k 5,5d | awk -F';' -v profil=Eleve '$4==profil {print $6","$5","$7","$8 > $3".csv"}'
+cat $1 | sort -t\; -k 6,6d -k 5,5d | awk -F';' -v profil=$2 '$4==profil {print $6","$5","$7","$8 > $3".csv"}'
 if [ -f classe.csv ]; then
     rm -f classe.csv
 fi
