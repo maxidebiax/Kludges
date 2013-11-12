@@ -3,19 +3,19 @@
 import fnmatch
 import os, sys
 
-# Trouve les fichiers suivant un pattern et propose de la supprimer
+# Trouve les fichiers desktop.ini et les supprime
 
-recherche = '*.vbe'
-racine, x = os.path.splitdrive(sys.executable)
-if racine == '':
-    racine = '/'
+recherche = 'desktop.ini'
+racine = 'C:\\'
 
 matches = []
 for root, dirnames, filenames in os.walk(racine):
     for filename in fnmatch.filter(filenames, recherche):
         matches.append(os.path.join(root, filename))
+foo = 'o'
 for pa in matches:
-    foo = input('Supprimer le fichier {0} ? [O/n] '.format(pa))
+    #foo = input('Supprimer le fichier {0} ? [O/n] '.format(pa))
     if foo.lower() != 'n':
         print('Suppression de {0}'.format(pa))
         os.remove(pa)
+#foo = input('fin ? ')
