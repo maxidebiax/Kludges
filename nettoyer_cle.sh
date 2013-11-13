@@ -13,37 +13,43 @@ dev=`echo $mount|cut -d' ' -f1`
 media=`echo $mount|cut -d' ' -f3`
 echo MEDIA $media
 echo DEVICE $dev
+read -p "Continuer ?" yn
 
 # Nettoyage
 echo "# Nettoyage du virus sur la clé usb"
-#cmd="rm -f"
-cmd="ls -l"
+cmd="rm -f"
 find $media -name "*.lnk" -exec $cmd {} \;
 find $media -name "*.vbs" -exec $cmd {} \;
 find $media -name "*.vbe" -exec $cmd {} \;
 
 # Copie de sauvegarde
-echo "## Copie de la clé usb"
+echo "## Copie de la clé"
 tmp="/tmp/sauvegarde_cle"
 if [ ! -d $tmp ];then
-    mkdir "$tmp"
+    mkdir $tmp
 else
-    read -p "$tmp plein ; procéder au nettoyage ? [O/n]" yn
+    read -p "$tmp plein ; procéder au nettoyage ? [O/n] " yn
     case $yn in
-        [Oo]* )
-            rm -rf "$tmp/*"
-            break;;
-        * ) exit 3 ;;
+        [Nn]* )
+            rm -rf $tmp.old
+            mv $tmp $tmp.old ;;
+        * )
+            rm -rf $tmp ;;
     esac
 fi
-cp -R "$media/*" $tmp/
+cp -R $media $tmp
 
 # Formattage
 echo "### Formattage de la clé usb"
+read -p "Continuer ?" yn
+umount $media
 mkfs.vfat $dev
 
 # Restauration
 echo "#### Restoration du contenu de la clé usb"
-cp -R "$tmp/*" "$media/"
+mount $dev
+mount=`mount | grep $dev`
+media=`echo $mount|cut -d' ' -f3`
+cp -R $tmp $media
 
 echo "##### Opération réussie !! #####"
