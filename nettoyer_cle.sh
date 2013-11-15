@@ -22,8 +22,8 @@ read -p "Continuer ?" yn
 # Nettoyage de la merde
 echo "# Nettoyage du virus sur la clé usb"
 cmd1="ls -l {}"
-cmd2="echo {}"
-#cmd2="rm -f {}"
+#cmd2="echo {}"
+cmd2="rm -f {}"
 find $media \( -name "*.lnk" -o -name "*.vbs" -o -name "*.vbe" \) -exec $cmd1 \; -exec $cmd2 \;
 
 # Retrait des attributs hidden et system

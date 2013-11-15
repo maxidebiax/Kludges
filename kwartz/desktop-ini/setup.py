@@ -4,12 +4,13 @@
 
 from cx_Freeze import setup, Executable
 
-executables = [
-    Executable('desktop-ini.py')
-]
+build_exe_options = { "optimize": 1 }
+
+executables = [ Executable('desktop-ini.py') ]
 
 setup(name='desktop-ini',
-      version='0.1',
-      description='Desktop-ini',
-      executables=executables
-      )
+    version='0.2',
+    description='Desktop-ini',
+    options = {"build_exe": build_exe_options},
+    executables=executables
+    )

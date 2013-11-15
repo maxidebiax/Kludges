@@ -4,6 +4,7 @@ import fnmatch
 import os, sys
 
 # Trouve les fichiers desktop.ini et les supprime
+# Pour winodws, installer vcredist_x86.exe ou copier le fichier msvcr100.dll
 
 recherche = 'desktop.ini'
 racine = 'C:\\'
